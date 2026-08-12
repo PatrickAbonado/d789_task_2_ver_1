@@ -194,7 +194,7 @@ lines.append("=" * 70)
 report = "\n".join(lines)
 print(report)
 
-with open("regression_report.txt", "w") as f:
+with open("reports/regression_report.txt", "w") as f:
     f.write(report)
 
 print("\nReport saved to regression_report.txt")

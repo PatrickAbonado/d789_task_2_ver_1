@@ -197,7 +197,7 @@ report_lines.append("")
 report_text = "\n".join(report_lines)
 print(report_text)
 
-with open("classification_report.txt", "w") as f:
+with open("reports/classification_report.txt", "w") as f:
     f.write(report_text)
 
 # ------------------------------------------------------------------
@@ -210,7 +210,7 @@ for ax, (fs_name, res) in zip(axes, results.items()):
     disp.plot(ax=ax, colorbar=False, cmap="Blues")
     ax.set_title(f"Confusion Matrix\n{fs_name}\nAcc={res['accuracy']:.3f}")
 plt.tight_layout()
-plt.savefig("classification_confusion_matrices.png", dpi=150)
+plt.savefig("reports/classification_confusion_matrices.png", dpi=150)
 plt.close()
 
 # Bar chart comparing metrics across the two feature-selection methods
@@ -223,7 +223,7 @@ ax.set_title("Performance by Feature Selection Method")
 ax.legend(loc="lower right")
 plt.xticks(rotation=15)
 plt.tight_layout()
-plt.savefig("classification_metric_comparison.png", dpi=150)
+plt.savefig("reports/classification_metric_comparison.png", dpi=150)
 plt.close()
 
 print("\nSaved: classification_report.txt, confusion_matrices.png, classification_metric_comparison.png")
