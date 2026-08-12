@@ -1,0 +1,70 @@
+======================================================================
+HOUSING PRICE PREDICTION - MODEL REPORT
+======================================================================
+Dataset: Train.csv | Rows: 1460 | Raw features: 79
+Train/Test split: 1168 / 292 (80/20)
+Preprocessing: SimpleImputer + StandardScaler (numeric), SimpleImputer + OneHotEncoder (categorical) via ColumnTransformer
+Features kept by each selector: 25
+
+----------------------------------------------------------------------
+FEATURE SELECTION METHOD: SelectKBest (f_regression)
+----------------------------------------------------------------------
+Model: Linear Regression
+Intercept: 175,533.59
+
+Top 10 features selected (by |coefficient|):
+    BsmtQual_Ex                    coef =    34,566.76
+    KitchenQual_Ex                 coef =    28,164.69
+    GrLivArea                      coef =    21,131.41
+    ExterQual_Ex                   coef =    16,370.88
+    OverallQual                    coef =    15,325.84
+    BsmtFinType1_GLQ               coef =    12,551.20
+    GarageCars                     coef =     7,857.99
+    Fireplaces                     coef =     6,903.13
+    KitchenQual_TA                 coef =    -6,354.88
+    YearBuilt                      coef =     5,402.30
+
+Performance metrics (on held-out test set):
+    R2             : 0.8408
+    Adjusted R2    : 0.8259
+    MAE            : 22,347.2550
+    RMSE           : 34,940.1851
+    MAPE (%)       : 13.4621
+
+----------------------------------------------------------------------
+FEATURE SELECTION METHOD: RFE (Recursive Feature Elimination)
+----------------------------------------------------------------------
+Model: Linear Regression
+Intercept: 160,422.73
+
+Top 10 features selected (by |coefficient|):
+    GrLivArea                      coef = -139,815,288,483,474,176.00
+    2ndFlrSF                       coef = 117,190,880,648,025,920.00
+    1stFlrSF                       coef = 103,088,757,735,939,728.00
+    LowQualFinSF                   coef = 12,766,842,488,915,932.00
+    ExterCond_Ex                   coef =    70,103.56
+    ExterCond_Po                   coef =   -48,234.86
+    KitchenQual_Ex                 coef =    48,083.46
+    BsmtQual_Ex                    coef =    46,429.59
+    BldgType_Duplex                coef =   -36,989.41
+    SaleCondition_Alloca           coef =    34,866.46
+
+Performance metrics (on held-out test set):
+    R2             : 0.8150
+    Adjusted R2    : 0.7976
+    MAE            : 25,058.4102
+    RMSE           : 37,668.6072
+    MAPE (%)       : 14.6906
+
+======================================================================
+SUMMARY COMPARISON
+======================================================================
+Metric                SelectKBest               RFE
+R2                         0.8408            0.8150
+Adjusted R2                0.8259            0.7976
+MAE                   22,347.2550       25,058.4102
+RMSE                  34,940.1851       37,668.6072
+MAPE (%)                  13.4621           14.6906
+
+Best performing feature selection method (by R2): SelectKBest
+======================================================================
