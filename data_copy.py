@@ -26,4 +26,4 @@ print(df_cat['PriceCategory'].value_counts())
 print(df_cat[['Id', 'PriceCategory']].head())
 
 # Save the new copy
-df_cat.to_csv('reports/data_copy.csv', index=False)
+df_cat.to_csv('data_copy.csv', index=False)
