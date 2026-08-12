@@ -1,0 +1,60 @@
+======================================================================
+HOUSING PRICE CATEGORY CLASSIFICATION - MODEL REPORT
+======================================================================
+Dataset: Train.csv (Ames Housing) | rows=1460, raw cols=80
+Target : PriceCategory derived from SalePrice quartiles -> ['Low', 'Medium', 'High', 'Luxury']
+Classifier: RandomForestClassifier(n_estimators=300)
+Train/Test split: 80/20 (stratified), random_state=42
+
+----------------------------------------------------------------------
+FEATURE SELECTION METHOD: SelectKBest (f_classif)
+----------------------------------------------------------------------
+Test Accuracy            : 0.7260
+Weighted Precision        : 0.7307
+Weighted Recall           : 0.7260
+Weighted F1-score         : 0.7275
+5-fold CV Accuracy (train): 0.7526 +/- 0.0124
+
+Classification Report:
+              precision    recall  f1-score   support
+
+         Low       0.70      0.68      0.69        73
+      Medium       0.80      0.73      0.76        73
+        High       0.85      0.88      0.86        72
+      Luxury       0.57      0.62      0.59        74
+
+    accuracy                           0.73       292
+   macro avg       0.73      0.73      0.73       292
+weighted avg       0.73      0.73      0.73       292
+
+
+----------------------------------------------------------------------
+FEATURE SELECTION METHOD: RFE (LogisticRegression)
+----------------------------------------------------------------------
+Test Accuracy            : 0.7671
+Weighted Precision        : 0.7721
+Weighted Recall           : 0.7671
+Weighted F1-score         : 0.7682
+5-fold CV Accuracy (train): 0.7740 +/- 0.0204
+
+Classification Report:
+              precision    recall  f1-score   support
+
+         Low       0.70      0.73      0.71        73
+      Medium       0.89      0.77      0.82        73
+        High       0.84      0.89      0.86        72
+      Luxury       0.66      0.69      0.68        74
+
+    accuracy                           0.77       292
+   macro avg       0.77      0.77      0.77       292
+weighted avg       0.77      0.77      0.77       292
+
+
+======================================================================
+FEATURE SELECTION METHOD COMPARISON
+======================================================================
+                          Accuracy  Precision (weighted)  Recall (weighted)  F1 (weighted)  CV Mean Accuracy
+SelectKBest (f_classif)     0.7260                0.7307             0.7260         0.7275            0.7526
+RFE (LogisticRegression)    0.7671                0.7721             0.7671         0.7682            0.7740
+
+Best performing feature selection method (by test accuracy): RFE (LogisticRegression)

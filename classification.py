@@ -10,7 +10,7 @@ Pipeline components (all required elements of the assignment):
                               - categorical: SimpleImputer(constant) + OneHotEncoder
   3. Feature selection #1 : SelectKBest (ANOVA F-test, f_classif)   -- filter method
   4. Feature selection #2 : RFE (Recursive Feature Elimination)     -- wrapper method
-  5. Classifier            : RandomForestClassifier (a classical, non-regression model)
+  5. Classifier            : RandomForestClassifier
   6. Reporting             : classification_report, confusion matrix, accuracy,
                               precision/recall/F1, 5-fold cross validation,
                               feature-selection comparison, saved plots + text report
@@ -197,7 +197,7 @@ report_lines.append("")
 report_text = "\n".join(report_lines)
 print(report_text)
 
-with open("model_report.txt", "w") as f:
+with open("classification_report.txt", "w") as f:
     f.write(report_text)
 
 # ------------------------------------------------------------------
@@ -210,7 +210,7 @@ for ax, (fs_name, res) in zip(axes, results.items()):
     disp.plot(ax=ax, colorbar=False, cmap="Blues")
     ax.set_title(f"Confusion Matrix\n{fs_name}\nAcc={res['accuracy']:.3f}")
 plt.tight_layout()
-plt.savefig("confusion_matrices.png", dpi=150)
+plt.savefig("classification_confusion_matrices.png", dpi=150)
 plt.close()
 
 # Bar chart comparing metrics across the two feature-selection methods
@@ -223,7 +223,7 @@ ax.set_title("Performance by Feature Selection Method")
 ax.legend(loc="lower right")
 plt.xticks(rotation=15)
 plt.tight_layout()
-plt.savefig("metric_comparison.png", dpi=150)
+plt.savefig("classification_metric_comparison.png", dpi=150)
 plt.close()
 
-print("\nSaved: model_report.txt, confusion_matrices.png, metric_comparison.png")
+print("\nSaved: classification_report.txt, confusion_matrices.png, classification_metric_comparison.png")
