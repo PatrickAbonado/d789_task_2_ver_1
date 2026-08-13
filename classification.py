@@ -201,29 +201,33 @@ with open("reports/classification_report.txt", "w") as f:
     f.write(report_text)
 
 # ------------------------------------------------------------------
-# 7. VISUAL REPORTS: confusion matrices for both feature selectors
+# 7. VISUAL REPORTS: confusion matrices + metric comparison
+#    combined into a single PNG (2 rows: confusion matrices on top,
+#    metric comparison bar chart on the bottom, spanning both columns)
 # ------------------------------------------------------------------
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-for ax, (fs_name, res) in zip(axes, results.items()):
+fig = plt.figure(figsize=(14, 11))
+gs = fig.add_gridspec(2, 2, height_ratios=[1, 1])
+
+# -- Top row: one confusion matrix per feature selection method --
+for i, (fs_name, res) in enumerate(results.items()):
+    ax_cm = fig.add_subplot(gs[0, i])
     cm = confusion_matrix(y_test, res["y_pred"], labels=labels)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-    disp.plot(ax=ax, colorbar=False, cmap="Blues")
-    ax.set_title(f"Confusion Matrix\n{fs_name}\nAcc={res['accuracy']:.3f}")
-plt.tight_layout()
-plt.savefig("reports/classification_confusion_matrices.png", dpi=150)
-plt.close()
+    disp.plot(ax=ax_cm, colorbar=False, cmap="Blues")
+    ax_cm.set_title(f"Confusion Matrix\n{fs_name}\nAcc={res['accuracy']:.3f}")
 
-# Bar chart comparing metrics across the two feature-selection methods
+# -- Bottom row: bar chart comparing metrics, spanning both columns --
+ax_bar = fig.add_subplot(gs[1, :])
 metrics_to_plot = ["Accuracy", "Precision (weighted)", "Recall (weighted)", "F1 (weighted)"]
-fig, ax = plt.subplots(figsize=(9, 5))
-comp_df[metrics_to_plot].plot(kind="bar", ax=ax)
-ax.set_ylim(0, 1)
-ax.set_ylabel("Score")
-ax.set_title("Performance by Feature Selection Method")
-ax.legend(loc="lower right")
-plt.xticks(rotation=15)
+comp_df[metrics_to_plot].plot(kind="bar", ax=ax_bar)
+ax_bar.set_ylim(0, 1)
+ax_bar.set_ylabel("Score")
+ax_bar.set_title("Performance by Feature Selection Method")
+ax_bar.legend(loc="lower right")
+ax_bar.tick_params(axis="x", rotation=15)
+
 plt.tight_layout()
-plt.savefig("reports/classification_metric_comparison.png", dpi=150)
+plt.savefig("reports/classification_visual_report.png", dpi=150)
 plt.close()
 
-print("\nSaved: classification_report.txt, confusion_matrices.png, classification_metric_comparison.png")
+print("\nSaved: classification_report.txt, classification_report.png")

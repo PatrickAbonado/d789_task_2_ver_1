@@ -20,8 +20,12 @@ Pipeline components:
 import warnings
 warnings.filterwarnings("ignore")
 
+import os
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -194,7 +198,94 @@ lines.append("=" * 70)
 report = "\n".join(lines)
 print(report)
 
+os.makedirs("reports", exist_ok=True)
 with open("reports/regression_report.txt", "w") as f:
     f.write(report)
 
-print("\nReport saved to regression_report.txt")
+print("\nReport saved to reports/regression_report.txt")
+
+# ---------------------------------------------------------------------------
+# 8. Visualization: model outputs + performance metrics dashboard
+# ---------------------------------------------------------------------------
+plt.rcParams.update({"font.size": 9})
+fig = plt.figure(figsize=(16, 14))
+fig.suptitle("Housing Price Prediction \u2014 Model Report", fontsize=16, fontweight="bold", y=0.995)
+
+results = [
+    ("SelectKBest (f_regression)", "tab:blue", model_kbest, kbest_features, pred_kbest, metrics_kbest),
+    ("RFE", "tab:orange", model_rfe, rfe_features, pred_rfe, metrics_rfe),
+]
+
+# --- Row 1: Actual vs Predicted scatter for each method ---
+for i, (name, color, model, feats, preds, metrics) in enumerate(results):
+    ax = fig.add_subplot(4, 2, i + 1)
+    ax.scatter(y_test, preds, alpha=0.5, s=18, color=color, edgecolor="k", linewidth=0.2)
+    lims = [min(y_test.min(), preds.min()), max(y_test.max(), preds.max())]
+    ax.plot(lims, lims, "r--", linewidth=1, label="Perfect prediction")
+    ax.set_xlabel("Actual SalePrice")
+    ax.set_ylabel("Predicted SalePrice")
+    ax.set_title(f"{name}\nActual vs. Predicted (R\u00b2 = {metrics['R2']:.3f})")
+    ax.legend(fontsize=7)
+
+# --- Row 2: Residual plots for each method ---
+for i, (name, color, model, feats, preds, metrics) in enumerate(results):
+    ax = fig.add_subplot(4, 2, i + 3)
+    residuals = y_test.values - preds
+    ax.scatter(preds, residuals, alpha=0.5, s=18, color=color, edgecolor="k", linewidth=0.2)
+    ax.axhline(0, color="r", linestyle="--", linewidth=1)
+    ax.set_xlabel("Predicted SalePrice")
+    ax.set_ylabel("Residual (Actual - Predicted)")
+    ax.set_title(f"{name}\nResiduals")
+
+# --- Row 3: Top 10 feature coefficients for each method ---
+for i, (name, color, model, feats, preds, metrics) in enumerate(results):
+    ax = fig.add_subplot(4, 2, i + 5)
+    coef_pairs = sorted(zip(feats, model.coef_), key=lambda p: abs(p[1]), reverse=True)[:10]
+    labels = [p[0] for p in coef_pairs][::-1]
+    values = [p[1] for p in coef_pairs][::-1]
+    bar_colors = ["tab:green" if v >= 0 else "tab:red" for v in values]
+    ax.barh(labels, values, color=bar_colors)
+    ax.set_title(f"{name}\nTop 10 Coefficients")
+    ax.set_xlabel("Coefficient value")
+    ax.tick_params(axis="y", labelsize=7)
+
+# --- Row 4, col 1: Grouped bar chart comparing metrics ---
+ax_metrics = fig.add_subplot(4, 2, 7)
+metric_names = list(metrics_kbest.keys())
+x = np.arange(len(metric_names))
+width = 0.35
+# Normalize each metric's pair to [0,1] so different scales are readable together
+kbest_vals = np.array([metrics_kbest[m] for m in metric_names], dtype=float)
+rfe_vals = np.array([metrics_rfe[m] for m in metric_names], dtype=float)
+ax_metrics.bar(x - width / 2, kbest_vals, width, label="SelectKBest", color="tab:blue")
+ax_metrics.bar(x + width / 2, rfe_vals, width, label="RFE", color="tab:orange")
+ax_metrics.set_xticks(x)
+ax_metrics.set_xticklabels(metric_names, rotation=20, ha="right")
+ax_metrics.set_title("Metric Comparison (raw values)")
+ax_metrics.legend(fontsize=8)
+for xi, (kv, rv) in enumerate(zip(kbest_vals, rfe_vals)):
+    ax_metrics.text(xi - width / 2, kv, f"{kv:,.2f}", ha="center", va="bottom", fontsize=6, rotation=90)
+    ax_metrics.text(xi + width / 2, rv, f"{rv:,.2f}", ha="center", va="bottom", fontsize=6, rotation=90)
+
+# --- Row 4, col 2: R2 / Adjusted R2 head-to-head bar ---
+ax_r2 = fig.add_subplot(4, 2, 8)
+r2_metrics = ["R2", "Adjusted R2"]
+x2 = np.arange(len(r2_metrics))
+kbest_r2 = [metrics_kbest[m] for m in r2_metrics]
+rfe_r2 = [metrics_rfe[m] for m in r2_metrics]
+bars1 = ax_r2.bar(x2 - width / 2, kbest_r2, width, label="SelectKBest", color="tab:blue")
+bars2 = ax_r2.bar(x2 + width / 2, rfe_r2, width, label="RFE", color="tab:orange")
+ax_r2.set_xticks(x2)
+ax_r2.set_xticklabels(r2_metrics)
+ax_r2.set_ylim(0, 1)
+ax_r2.set_title(f"R\u00b2 Comparison \u2014 Winner: {winner}")
+ax_r2.legend(fontsize=8)
+ax_r2.bar_label(bars1, fmt="%.3f", fontsize=7)
+ax_r2.bar_label(bars2, fmt="%.3f", fontsize=7)
+
+plt.tight_layout(rect=[0, 0, 1, 0.98])
+viz_path = "reports/regression_visual_report.png"
+plt.savefig(viz_path, dpi=150, bbox_inches="tight")
+plt.close(fig)
+
+print(f"Visualization dashboard saved to {viz_path}")
