@@ -1,0 +1,55 @@
+==============================================================================
+HOUSING PRICE MODELS — CROSS-MODEL COMPARISON REPORT
+==============================================================================
+
+Models evaluated
+  1. LinearRegression          (classical, sklearn)
+  2. MLPRegressor               (deep learning, sklearn)
+  3. 1-D CNN                    (deep learning, PyTorch)
+  4. RandomForestClassifier     (classification of price quartiles)
+
+All three regression models share the same high-level pipeline:
+  ColumnTransformer (impute + scale / one-hot) → Feature selection
+  (SelectKBest or RFE) → Model.  Metrics are reported on a held-out
+  20 % validation / test split of Train.csv.
+
+------------------------------------------------------------------------------
+REGRESSION MODELS (continuous SalePrice target)
+------------------------------------------------------------------------------
+           Model Feature_Selection     R2 Adjusted_R2    MAE   RMSE   MAPE
+          1D_CNN               RFE 0.8713           — 19,718 31,419      —
+             MLP       SelectKBest 0.8574      0.8439 21,986 33,078 13.91%
+LinearRegression       SelectKBest 0.8408      0.8259 22,347 34,940      —
+             MLP               RFE 0.8196      0.8026 25,450 37,199 15.90%
+LinearRegression               RFE 0.8150      0.7976 25,058 37,669      —
+          1D_CNN       SelectKBest 0.7955           — 23,784 39,607      —
+
+Best feature-selection method per model (lowest RMSE):
+  1D_CNN                →  RFE           RMSE=$31,419   R²=0.8713
+  MLP                   →  SelectKBest   RMSE=$33,078   R²=0.8574
+  LinearRegression      →  SelectKBest   RMSE=$34,940   R²=0.8408
+
+Overall best regression configuration: 1D_CNN + RFE (RMSE = $31,419)
+
+------------------------------------------------------------------------------
+CLASSIFICATION MODEL (SalePrice → Low / Medium / High / Luxury quartiles)
+------------------------------------------------------------------------------
+Feature_Selection Accuracy Precision_weighted Recall_weighted F1_weighted CV_mean_accuracy
+      SelectKBest   0.7260             0.7307          0.7260      0.7275           0.7526
+              RFE   0.7671             0.7721          0.7671      0.7682           0.7740
+
+Best classification configuration: RFE (Test Accuracy = 0.7671)
+
+------------------------------------------------------------------------------
+NOTES
+------------------------------------------------------------------------------
+• Classification and regression metrics are not directly comparable;
+  the classifier predicts a 4-class price band, while the others
+  predict continuous dollar amounts.
+• 1-D CNN reports RMSLE instead of MAPE; MAPE is shown as “—” for it.
+• All models used the same Ames Housing Train.csv and a stratified/
+  random 80/20 split (random_state=42) for fair comparison.
+• Feature selection (SelectKBest vs RFE) is the only controlled
+  difference inside each model family.
+
+==============================================================================
