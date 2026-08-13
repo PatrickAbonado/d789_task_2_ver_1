@@ -1,0 +1,56 @@
+========================================================================
+DEEP LEARNING HOUSING PRICE PREDICTION — MODEL REPORT
+========================================================================
+Training rows used     : 1168
+Validation rows used   : 292  (20% holdout)
+Target                 : SalePrice
+Features kept per model: 25
+Model architecture     : MLPRegressor, hidden layers (128, 64, 32), activation=relu, solver=adam, alpha=0.001
+
+------------------------------------------------------------------------
+Feature Selection Method: SelectKBest (f_regression)
+------------------------------------------------------------------------
+  Training iterations run : 640
+  Final training loss     : 530947343.2668
+  Validation performance:
+    R-squared            : 0.8574
+    Adjusted R-squared    : 0.8439
+    MAE                   : 21,986.23
+    RMSE                  : 33,077.98
+    MAPE                  : 13.91%
+  Selected features (25):
+    OverallQual, YearBuilt, YearRemodAdd, MasVnrArea, TotalBsmtSF
+    1stFlrSF, GrLivArea, FullBath, TotRmsAbvGrd, Fireplaces
+    GarageYrBlt, GarageCars, GarageArea, ExterQual_Ex, ExterQual_Gd
+    ExterQual_TA, Foundation_PConc, BsmtQual_Ex, BsmtQual_TA, BsmtFinType1_GLQ
+    HeatingQC_Ex, KitchenQual_Ex, KitchenQual_TA, GarageFinish_Fin, GarageFinish_Unf
+
+------------------------------------------------------------------------
+Feature Selection Method: RFE (Ridge estimator)
+------------------------------------------------------------------------
+  Training iterations run : 133
+  Final training loss     : 620974517.5866
+  Validation performance:
+    R-squared            : 0.8196
+    Adjusted R-squared    : 0.8026
+    MAE                   : 25,449.87
+    RMSE                  : 37,199.48
+    MAPE                  : 15.90%
+  Selected features (25):
+    YearBuilt, GrLivArea, LandSlope_Sev, Neighborhood_Crawfor, Neighborhood_NoRidge
+    Neighborhood_NridgHt, Neighborhood_StoneBr, Neighborhood_Veenker, Condition2_PosA, Condition2_PosN
+    BldgType_1Fam, RoofStyle_Flat, RoofMatl_ClyTile, RoofMatl_CompShg, RoofMatl_WdShake
+    RoofMatl_WdShngl, Exterior2nd_ImStucc, BsmtQual_Ex, BsmtExposure_Gd, KitchenQual_Ex
+    Functional_Sev, GarageQual_Ex, GarageCond_Ex, PoolQC_Gd, SaleType_Con
+
+========================================================================
+HEAD-TO-HEAD COMPARISON
+========================================================================
+Metric              SelectKBest (f_regression)  RFE (Ridge estimator)       
+R-squared           0.8574                      0.8196                      
+Adjusted R-squared  0.8439                      0.8026                      
+MAE                 21,986.23                   25,449.87                   
+RMSE                33,077.98                   37,199.48                   
+MAPE (%)            13.91                       15.90                       
+
+Best performing approach: SelectKBest (f_regression)  (R-squared = 0.8574)
