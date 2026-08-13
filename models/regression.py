@@ -47,7 +47,7 @@ N_FEATURES = 25  # number of features each selector will keep
 # ---------------------------------------------------------------------------
 # 1. Load data
 # ---------------------------------------------------------------------------
-df = pd.read_csv("Train.csv")
+df = pd.read_csv("../Train.csv")
 
 # Id is just a row identifier, not predictive
 df = df.drop(columns=["Id"])
@@ -198,8 +198,8 @@ lines.append("=" * 70)
 report = "\n".join(lines)
 print(report)
 
-os.makedirs("reports", exist_ok=True)
-with open("reports/regression_report.txt", "w") as f:
+os.makedirs("../reports", exist_ok=True)
+with open("../reports/regression_report.txt", "w") as f:
     f.write(report)
 
 print("\nReport saved to reports/regression_report.txt")
@@ -284,7 +284,7 @@ ax_r2.bar_label(bars1, fmt="%.3f", fontsize=7)
 ax_r2.bar_label(bars2, fmt="%.3f", fontsize=7)
 
 plt.tight_layout(rect=[0, 0, 1, 0.98])
-viz_path = "reports/regression_visual_report.png"
+viz_path = "../reports/regression_visual_report.png"
 plt.savefig(viz_path, dpi=150, bbox_inches="tight")
 plt.close(fig)
 
