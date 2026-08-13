@@ -84,9 +84,9 @@ MLP_PARAMS = dict(
     random_state=RANDOM_STATE,
 )
 
-REPORT_PATH = "../reports/deep_learning_MLP_report.txt"
-PREDICTIONS_PATH = "../reports/deep_learning_MLP_predictions.csv"
-VISUALIZATION_PATH = "../reports/deep_learning_MLP_visual_report.png"
+REPORT_PATH = "../reports/mlp_reports/deep_learning_MLP_report.txt"
+PREDICTIONS_PATH = "../reports/mlp_reports/deep_learning_MLP_predictions.csv"
+VISUALIZATION_PATH = "../reports/mlp_reports/deep_learning_MLP_visual_report.png"
 
 
 # ---------------------------------------------------------------------------

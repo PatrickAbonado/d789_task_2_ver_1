@@ -199,10 +199,10 @@ report = "\n".join(lines)
 print(report)
 
 os.makedirs("../reports", exist_ok=True)
-with open("../reports/regression_report.txt", "w") as f:
+with open("../reports/regression_reports/regression_report.txt", "w") as f:
     f.write(report)
 
-print("\nReport saved to reports/regression_report.txt")
+print("\nReport saved to reports/regression_reports/regression_report.txt")
 
 # ---------------------------------------------------------------------------
 # 8. Visualization: model outputs + performance metrics dashboard
@@ -284,7 +284,7 @@ ax_r2.bar_label(bars1, fmt="%.3f", fontsize=7)
 ax_r2.bar_label(bars2, fmt="%.3f", fontsize=7)
 
 plt.tight_layout(rect=[0, 0, 1, 0.98])
-viz_path = "../reports/regression_visual_report.png"
+viz_path = "../reports/regression_reports/regression_visual_report.png"
 plt.savefig(viz_path, dpi=150, bbox_inches="tight")
 plt.close(fig)
 
