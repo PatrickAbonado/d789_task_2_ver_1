@@ -2,10 +2,7 @@ Patrick Abonado     #003619914
 D789                WGU
 
 
--The classification and regression models were based on an 80% and 20%
-split of Train.csv data.
-
--The deep learning models were trained on the Train.csv data.
+-All models were built and tested from the Train.csv data.
 
 compare_all_models.py:
 -The reports currently stored are from prior file script runs.
