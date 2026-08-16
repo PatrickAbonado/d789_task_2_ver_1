@@ -23,7 +23,7 @@ Expected report locations (relative to this script or project root)
   reports/regression_reports/regression_report.txt
   reports/mlp_reports/deep_learning_MLP_report.txt
   reports/1d_cnn_reports/model_report.txt
-  reports/classification_reports/classification_report.txt
+  reports/random_forest_reports/classification_report.txt
 
 Usage
 -----
@@ -70,7 +70,7 @@ REPORT_PATHS = {
     "LinearRegression": "regression_reports/regression_report.txt",
     "MLP": "mlp_reports/deep_learning_MLP_report.txt",
     "1D_CNN": "1d_cnn_reports/model_report.txt",
-    "Classifier": "classification_reports/classification_report.txt",
+    "Classifier": "random_forest_reports/classification_report.txt",
 }
 
 
@@ -678,7 +678,7 @@ if __name__ == "__main__":
         type=Path,
         default=None,
         help="Folder that contains regression_reports/, mlp_reports/, "
-             "1d_cnn_reports/, classification_reports/. "
+             "1d_cnn_reports/, random_forest_reports/. "
              "If omitted, the script searches common relative locations.",
     )
     parser.add_argument(

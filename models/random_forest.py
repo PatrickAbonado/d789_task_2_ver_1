@@ -197,7 +197,7 @@ report_lines.append("")
 report_text = "\n".join(report_lines)
 print(report_text)
 
-with open("../reports/classification_reports/classification_report.txt", "w") as f:
+with open("../reports/random_forest_reports/random_forest_report.txt", "w") as f:
     f.write(report_text)
 
 # ------------------------------------------------------------------
@@ -227,7 +227,7 @@ ax_bar.legend(loc="lower right")
 ax_bar.tick_params(axis="x", rotation=15)
 
 plt.tight_layout()
-plt.savefig("../reports/classification_reports/classification_visual_report.png", dpi=150)
+plt.savefig("../reports/random_forest_reports/random_forest_visual_report.png", dpi=150)
 plt.close()
 
-print("\nSaved: classification_report.txt, classification_report.png")
+print("\nSaved: random_forest_report.txt, random_forest_report.png")
