@@ -4,8 +4,8 @@ Compare Performance Metrics & Outputs of All 4 Housing Models
 Models compared
 ---------------
 1. Classical Linear Regression          (regression.py)
-2. MLPRegressor (Deep Learning)         (deep_learning_MLP.py)
-3. 1-D CNN (Deep Learning)              (deep_learning_1D_CNN.py)
+2. MLPRegressor (Deep Learning)         (MLP.py)
+3. 1-D CNN (Deep Learning)              (1D_CNN.py)
 4. RandomForest Classifier              (classification.py)
 
 How it works
@@ -619,8 +619,8 @@ def main(reports_root: Optional[Path], output_dir: Optional[Path]) -> None:
         print("Please do one of the following:")
         print("  1. Run the four model scripts first so they write their reports:")
         print("       python regression.py")
-        print("       python deep_learning_MLP.py")
-        print("       python deep_learning_1D_CNN.py")
+        print("       python MLP.py")
+        print("       python 1D_CNN.py")
         print("       python classification.py")
         print("  2. Or point this script at the folder that already contains the reports:")
         print("       python all_models_comparison.py --reports-root \"C:\\path\\to\\reports\"")
