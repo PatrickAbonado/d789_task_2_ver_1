@@ -68,9 +68,9 @@ RANDOM_STATE = 42
 # Report file relative paths (under the reports root)
 REPORT_PATHS = {
     "LinearRegression": "regression_reports/regression_report.txt",
-    "MLP": "mlp_reports/deep_learning_MLP_report.txt",
+    "MLP": "mlp_reports/MLP_report.txt",
     "1D_CNN": "1d_cnn_reports/model_report.txt",
-    "Classifier": "random_forest_reports/classification_report.txt",
+    "Classifier": "random_forest_reports/random_forest_report.txt",
 }
 
 
