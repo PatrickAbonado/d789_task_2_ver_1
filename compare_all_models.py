@@ -595,6 +595,162 @@ def plot_comparison(
 
 
 # ---------------------------------------------------------------------------
+# Multivariate visualization — parallel coordinates
+# ---------------------------------------------------------------------------
+# Metrics where a LOWER value is better. Everything else is treated as
+# "higher is better" (R2, Adjusted_R2). Direction is flipped during
+# normalization so that on every axis, "up" always means "better performing",
+# which keeps the plot readable across metrics with opposite polarity.
+LOWER_IS_BETTER = {"MAE", "RMSE", "MAPE", "RMSLE"}
+
+
+def plot_multivariate_comparison(
+    reg_df: pd.DataFrame,
+    clf_df: pd.DataFrame,
+    out_path: Path,
+    metrics: Optional[List[str]] = None,
+) -> None:
+    """
+    Parallel-coordinates plot: each (Model, Feature_Selection) configuration
+    is drawn as a single line crossing several metric axes at once, so the
+    figure encodes many variables simultaneously —
+        model family (color) x feature-selection method (line style)
+        x N performance metrics (one axis each, direction-normalized).
+    This is what makes it multivariate rather than the bivariate bar/scatter
+    panels in plot_comparison(), which only ever relate two variables at a
+    time.
+    """
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if metrics is None:
+        # Use only metrics present (non-null) for every regression row so
+        # every line is fully drawn; require at least 3 to be "multivariate".
+        candidate_metrics = ["R2", "Adjusted_R2", "MAE", "RMSE", "MAPE", "RMSLE"]
+        metrics = [
+            m for m in candidate_metrics
+            if m in reg_df.columns and reg_df[m].notna().all()
+        ] if not reg_df.empty else []
+
+    fig, axes = plt.subplots(
+        1, 2, figsize=(17, 7),
+        gridspec_kw={"width_ratios": [2.2, 1]}
+    )
+    ax_pc, ax_legend = axes
+    fig.suptitle(
+        "Multivariate Model Comparison — All Metrics at Once (Parallel Coordinates)",
+        fontsize=15, fontweight="bold"
+    )
+
+    model_colors = {
+        "LinearRegression": "#2E86AB",
+        "MLP": "#E67E22",
+        "1D_CNN": "#27AE60",
+        "RandomForestClassifier": "#8E44AD",
+    }
+    selector_styles = {"SelectKBest": "-", "RFE": "--"}
+    selector_markers = {"SelectKBest": "o", "RFE": "s"}
+
+    if reg_df.empty or len(metrics) < 3:
+        ax_pc.text(
+            0.5, 0.5,
+            "Not enough shared metrics across models\nfor a parallel-coordinates view.",
+            ha="center", va="center", fontsize=11
+        )
+        ax_pc.set_title("Parallel Coordinates")
+    else:
+        n_axes = len(metrics)
+        x_positions = np.arange(n_axes)
+
+        # Min-max normalize each metric to [0, 1], flipping "lower is better"
+        # metrics so that 1.0 always means "best observed" on that axis.
+        norm_df = reg_df.copy()
+        for m in metrics:
+            col = reg_df[m].astype(float)
+            lo, hi = col.min(), col.max()
+            if np.isclose(hi, lo):
+                norm_df[m] = 0.5
+            else:
+                scaled = (col - lo) / (hi - lo)
+                norm_df[m] = (1 - scaled) if m in LOWER_IS_BETTER else scaled
+
+        for _, row in reg_df.iterrows():
+            y_vals = [norm_df.loc[row.name, m] for m in metrics]
+            color = model_colors.get(row["Model"], "#888888")
+            style = selector_styles.get(row["Feature_Selection"], "-")
+            marker = selector_markers.get(row["Feature_Selection"], "o")
+            ax_pc.plot(
+                x_positions, y_vals,
+                color=color, linestyle=style, marker=marker,
+                markersize=7, linewidth=2.2, alpha=0.85,
+                label=f"{row['Model']} / {row['Feature_Selection']}"
+            )
+
+        # Vertical axis lines + metric labels, with the raw (un-normalized)
+        # best/worst values annotated so the plot stays interpretable.
+        for xi, m in enumerate(metrics):
+            ax_pc.axvline(xi, color="grey", linewidth=0.8, alpha=0.4, zorder=0)
+            raw = reg_df[m].astype(float)
+            better_word = "min" if m in LOWER_IS_BETTER else "max"
+            ax_pc.annotate(
+                f"best={raw.min() if m in LOWER_IS_BETTER else raw.max():,.3g}",
+                (xi, 1.03), ha="center", fontsize=7.5, color="#2c662d"
+            )
+            ax_pc.annotate(
+                f"worst={raw.max() if m in LOWER_IS_BETTER else raw.min():,.3g}",
+                (xi, -0.08), ha="center", fontsize=7.5, color="#a33"
+            )
+
+        ax_pc.set_xticks(x_positions)
+        ax_pc.set_xticklabels(metrics, fontsize=10)
+        ax_pc.set_ylim(-0.15, 1.15)
+        ax_pc.set_ylabel("Normalized score (1.0 = best observed, direction-corrected)")
+        ax_pc.set_title("Each line = one Model × Feature-Selection configuration")
+        ax_pc.grid(axis="y", alpha=0.25)
+
+    # ---- Side panel: explicit legends for the two encoded categorical dims
+    ax_legend.axis("off")
+    if not reg_df.empty and len(metrics) >= 3:
+        model_handles = [
+            plt.Line2D([0], [0], color=c, linewidth=3, label=m)
+            for m, c in model_colors.items() if m in reg_df["Model"].unique()
+        ]
+        selector_handles = [
+            plt.Line2D([0], [0], color="black", linestyle=selector_styles[s],
+                       marker=selector_markers[s], markersize=7, label=s)
+            for s in reg_df["Feature_Selection"].unique() if s in selector_styles
+        ]
+        leg1 = ax_legend.legend(
+            handles=model_handles, title="Model (color)",
+            loc="upper left", fontsize=9, title_fontsize=10, frameon=False
+        )
+        ax_legend.add_artist(leg1)
+        ax_legend.legend(
+            handles=selector_handles, title="Feature selection (line style)",
+            loc="center left", fontsize=9, title_fontsize=10, frameon=False,
+            bbox_to_anchor=(0, 0.45)
+        )
+        ax_legend.text(
+            0, 0.05,
+            "Reading the plot:\n"
+            "• Each axis is a different metric, independently\n"
+            "  rescaled to 0–1 so scales don't dominate.\n"
+            "• All axes point the same direction: higher (near\n"
+            "  the top) is always better, even for metrics like\n"
+            "  RMSE/MAE where lower raw values are better.\n"
+            "• A line that stays high across every axis is the\n"
+            "  most consistently strong configuration; a line\n"
+            "  that dips is trading off one metric for another.",
+            transform=ax_legend.transAxes, fontsize=8.5, va="bottom",
+            family="monospace"
+        )
+
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Multivariate visualization saved → {out_path}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main(reports_root: Optional[Path], output_dir: Optional[Path]) -> None:
@@ -655,6 +811,10 @@ def main(reports_root: Optional[Path], output_dir: Optional[Path]) -> None:
     # Visualization
     viz_path = output_dir / "model_comparison_visual.png"
     plot_comparison(reg_df, clf_df, best_df, viz_path)
+
+    # Multivariate visualization (parallel coordinates across all metrics)
+    multivariate_path = output_dir / "model_comparison_multivariate.png"
+    plot_multivariate_comparison(reg_df, clf_df, multivariate_path)
 
     # Also save the tables as CSV for further analysis
     if not reg_df.empty:
