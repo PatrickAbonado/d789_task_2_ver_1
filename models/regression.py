@@ -80,7 +80,14 @@ numeric_transformer = Pipeline(steps=[
 
 categorical_transformer = Pipeline(steps=[
     ("imputer", SimpleImputer(strategy="most_frequent")),
-    ("onehot", OneHotEncoder(handle_unknown="ignore")),
+    # drop="first" removes one reference level per categorical column. Without
+    # this, the one-hot levels of any category (plus the model's intercept)
+    # sum to a constant, making the design matrix exactly singular whenever a
+    # feature selector (e.g. RFE) happens to retain most/all levels of the
+    # same original column -- this produced coefficients in the quintillions
+    # in testing. Dropping a level removes the structural redundancy so this
+    # can't happen regardless of what feature selection later picks.
+    ("onehot", OneHotEncoder(handle_unknown="ignore", drop="first")),
 ])
 
 preprocessor = ColumnTransformer(transformers=[
