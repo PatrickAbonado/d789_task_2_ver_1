@@ -342,3 +342,27 @@ plt.savefig(viz_path, dpi=150, bbox_inches="tight")
 plt.close(fig)
 
 print(f"Visualization dashboard saved to {viz_path}")
+
+# ---------------------------------------------------------------------------
+# 9. Visualization: univariate histogram of residuals for each method
+# ---------------------------------------------------------------------------
+fig_hist, axes_hist = plt.subplots(1, 2, figsize=(12, 5))
+fig_hist.suptitle("Housing Price Prediction \u2014 Residual Distribution", fontsize=14, fontweight="bold")
+
+for ax, (name, color, model, feats, preds, metrics) in zip(axes_hist, results):
+    residuals = y_test.values - preds
+    ax.hist(residuals, bins=30, color=color, edgecolor="k", linewidth=0.3, alpha=0.8)
+    ax.axvline(0, color="r", linestyle="--", linewidth=1, label="Zero error")
+    ax.axvline(residuals.mean(), color="black", linestyle=":", linewidth=1,
+               label=f"Mean = {residuals.mean():,.0f}")
+    ax.set_title(f"{name}\nResidual Histogram")
+    ax.set_xlabel("Residual (Actual - Predicted)")
+    ax.set_ylabel("Frequency")
+    ax.legend(fontsize=8)
+
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+hist_path = "../reports/regression_reports/regression_residual_histogram.png"
+plt.savefig(hist_path, dpi=150, bbox_inches="tight")
+plt.close(fig_hist)
+
+print(f"Residual histogram saved to {hist_path}")
