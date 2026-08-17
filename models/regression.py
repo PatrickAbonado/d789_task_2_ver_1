@@ -104,6 +104,38 @@ if hasattr(X_train_proc, "toarray"):
 print(f"Feature matrix after preprocessing: {X_train_proc.shape[1]} columns\n")
 
 # ---------------------------------------------------------------------------
+# 3b. Multicollinearity guard
+# ---------------------------------------------------------------------------
+# Near-duplicate / linearly-dependent numeric features (e.g. GrLivArea is
+# almost exactly 1stFlrSF + 2ndFlrSF + LowQualFinSF in this dataset) can make
+# the LinearRegression normal-equations solve numerically unstable, producing
+# huge, meaningless coefficients -- especially once RFE narrows the feature
+# set down and the redundancy becomes a larger share of the remaining columns.
+# We drop one member of any highly-correlated pair (|r| > CORR_THRESHOLD)
+# computed on the training data, before either feature selector runs, so both
+# branches see the same de-duplicated, numerically stable feature space.
+CORR_THRESHOLD = 0.95
+
+corr_matrix = pd.DataFrame(X_train_proc, columns=all_feature_names).corr().abs()
+upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+to_drop = [col for col in upper.columns if any(upper[col] > CORR_THRESHOLD)]
+
+if to_drop:
+    print(f"Dropping {len(to_drop)} highly-collinear feature(s) (|r| > {CORR_THRESHOLD}):")
+    for col in to_drop:
+        partner = upper.index[upper[col] > CORR_THRESHOLD][0]
+        r = corr_matrix.loc[partner, col]
+        print(f"    {col:<30s} (r = {r:.3f} with {partner})")
+    print()
+
+keep_mask = ~np.isin(all_feature_names, to_drop)
+all_feature_names = all_feature_names[keep_mask]
+X_train_proc = X_train_proc[:, keep_mask]
+X_test_proc = X_test_proc[:, keep_mask]
+
+print(f"Feature matrix after collinearity filtering: {X_train_proc.shape[1]} columns\n")
+
+# ---------------------------------------------------------------------------
 # 4. Feature Selection Algorithm #1: SelectKBest (f_regression / ANOVA F-test)
 # ---------------------------------------------------------------------------
 selector_kbest = SelectKBest(score_func=f_regression, k=N_FEATURES)
@@ -127,6 +159,20 @@ rfe_features = all_feature_names[selector_rfe.get_support()]
 model_rfe = LinearRegression()
 model_rfe.fit(X_train_rfe, y_train)
 pred_rfe = model_rfe.predict(X_test_rfe)
+
+# Sanity check: pairwise correlation filtering catches most collinearity, but
+# not higher-order linear dependencies among 3+ features. If coefficients are
+# still absurdly large, the fitted model is numerically unstable and its
+# coefficients (though not necessarily its predictions) should not be trusted.
+COEF_SANITY_LIMIT = 1e7  # SalePrice is in the hundreds of thousands; a
+                          # per-unit coefficient above this is not physically
+                          # plausible and signals near-singular collinearity
+if np.any(np.abs(model_rfe.coef_) > COEF_SANITY_LIMIT):
+    print("WARNING: RFE-selected feature set still produces implausibly large")
+    print("         coefficients (numerical instability from residual multi-")
+    print("         collinearity). Consider raising N_FEATURES' step size,")
+    print("         lowering CORR_THRESHOLD, or using Ridge as the RFE/final")
+    print("         estimator to regularize against this.\n")
 
 # ---------------------------------------------------------------------------
 # 6. Performance metrics helper

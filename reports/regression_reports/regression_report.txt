@@ -35,36 +35,36 @@ Performance metrics (on held-out test set):
 FEATURE SELECTION METHOD: RFE (Recursive Feature Elimination)
 ----------------------------------------------------------------------
 Model: Linear Regression
-Intercept: 160,422.73
+Intercept: -2,090,971,030,333,284,096.00
 
 Top 10 features selected (by |coefficient|):
-    GrLivArea                      coef = -139,815,288,483,474,176.00
-    2ndFlrSF                       coef = 117,190,880,648,025,920.00
-    1stFlrSF                       coef = 103,088,757,735,939,728.00
-    LowQualFinSF                   coef = 12,766,842,488,915,932.00
-    ExterCond_Ex                   coef =    70,103.56
-    ExterCond_Po                   coef =   -48,234.86
-    KitchenQual_Ex                 coef =    48,083.46
-    BsmtQual_Ex                    coef =    46,429.59
-    BldgType_Duplex                coef =   -36,989.41
-    SaleCondition_Alloca           coef =    34,866.46
+    BsmtQual_Ex                    coef = 1,204,033,068,909,106,432.00
+    BsmtQual_Gd                    coef = 1,204,033,068,909,000,192.00
+    BsmtQual_TA                    coef = 1,204,033,068,908,952,320.00
+    BsmtQual_Fa                    coef = 1,204,033,068,908,932,864.00
+    Foundation_Stone               coef = 954,395,753,948,361,984.00
+    Foundation_PConc               coef = 954,395,753,948,347,520.00
+    Foundation_CBlock              coef = 954,395,753,948,320,256.00
+    Foundation_Wood                coef = 954,395,753,948,318,208.00
+    Foundation_BrkTil              coef = 954,395,753,948,313,344.00
+    Foundation_Slab                coef = 954,395,753,948,283,264.00
 
 Performance metrics (on held-out test set):
-    R2             : 0.8150
-    Adjusted R2    : 0.7976
-    MAE            : 25,058.4102
-    RMSE           : 37,668.6072
-    MAPE (%)       : 14.6906
+    R2             : 0.5205
+    Adjusted R2    : 0.4754
+    MAE            : 40,873.0034
+    RMSE           : 60,647.5930
+    MAPE (%)       : 26.5293
 
 ======================================================================
 SUMMARY COMPARISON
 ======================================================================
 Metric                SelectKBest               RFE
-R2                         0.8408            0.8150
-Adjusted R2                0.8259            0.7976
-MAE                   22,347.2550       25,058.4102
-RMSE                  34,940.1851       37,668.6072
-MAPE (%)                  13.4621           14.6906
+R2                         0.8408            0.5205
+Adjusted R2                0.8259            0.4754
+MAE                   22,347.2550       40,873.0034
+RMSE                  34,940.1851       60,647.5930
+MAPE (%)                  13.4621           26.5293
 
 Best performing feature selection method (by R2): SelectKBest
 ======================================================================
