@@ -1,0 +1,56 @@
+========================================================================
+DEEP LEARNING HOUSING PRICE PREDICTION — MODEL REPORT
+========================================================================
+Training rows used     : 1168
+Validation rows used   : 292  (20% holdout)
+Target                 : SalePrice
+Features kept per model: 25
+Model architecture     : MLPRegressor, hidden layers (128, 64, 32), activation=relu, solver=adam, alpha=0.001
+
+------------------------------------------------------------------------
+Feature Selection Method: SelectKBest (f_regression)
+------------------------------------------------------------------------
+  Training iterations run : 548
+  Final training loss     : 595391942.9997
+  Validation performance:
+    R-squared            : 0.8386
+    Adjusted R-squared    : 0.8234
+    MAE                   : 23,975.74
+    RMSE                  : 35,183.69
+    MAPE                  : 15.11%
+  Selected features (25):
+    OverallQual, YearBuilt, YearRemodAdd, MasVnrArea, BsmtFinSF1
+    TotalBsmtSF, 1stFlrSF, GrLivArea, FullBath, TotRmsAbvGrd
+    Fireplaces, GarageYrBlt, GarageCars, GarageArea, Neighborhood_NridgHt
+    ExterQual_Gd, ExterQual_TA, Foundation_CBlock, Foundation_PConc, BsmtQual_TA
+    BsmtFinType1_GLQ, KitchenQual_TA, GarageType_Detchd, GarageFinish_Unf, SaleType_New
+
+------------------------------------------------------------------------
+Feature Selection Method: RFE (Ridge estimator)
+------------------------------------------------------------------------
+  Training iterations run : 596
+  Final training loss     : 688721803.2641
+  Validation performance:
+    R-squared            : 0.7858
+    Adjusted R-squared    : 0.7656
+    MAE                   : 27,986.98
+    RMSE                  : 40,535.91
+    MAPE                  : 17.14%
+  Selected features (25):
+    GrLivArea, MSZoning_infrequent_sklearn, LandContour_HLS, Neighborhood_NoRidge, Neighborhood_NridgHt
+    Neighborhood_OldTown, Neighborhood_Somerst, Neighborhood_StoneBr, Neighborhood_infrequent_sklearn, Condition2_infrequent_sklearn
+    BldgType_Duplex, BldgType_Twnhs, BldgType_TwnhsE, Exterior1st_BrkFace, BsmtQual_Fa
+    BsmtQual_Gd, BsmtQual_TA, BsmtExposure_Gd, KitchenQual_Fa, KitchenQual_Gd
+    KitchenQual_TA, Functional_Typ, GarageQual_Gd, GarageQual_infrequent_sklearn, PoolQC_infrequent_sklearn
+
+========================================================================
+HEAD-TO-HEAD COMPARISON
+========================================================================
+Metric              SelectKBest (f_regression)  RFE (Ridge estimator)       
+R-squared           0.8386                      0.7858                      
+Adjusted R-squared  0.8234                      0.7656                      
+MAE                 23,975.74                   27,986.98                   
+RMSE                35,183.69                   40,535.91                   
+MAPE (%)            15.11                       17.14                       
+
+Best performing approach: SelectKBest (f_regression)  (R-squared = 0.8386)
