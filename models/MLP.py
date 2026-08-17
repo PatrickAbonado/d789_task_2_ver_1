@@ -84,9 +84,9 @@ MLP_PARAMS = dict(
     random_state=RANDOM_STATE,
 )
 
-REPORT_PATH = "../reports/mlp_reports/deep_learning_MLP_report.txt"
-PREDICTIONS_PATH = "../reports/mlp_reports/deep_learning_MLP_predictions.csv"
-VISUALIZATION_PATH = "../reports/mlp_reports/deep_learning_MLP_visual_report.png"
+REPORT_PATH = "../reports/mlp_reports/MLP_report.txt"
+PREDICTIONS_PATH = "../reports/mlp_reports/MLP_predictions.csv"
+VISUALIZATION_PATH = "../reports/mlp_reports/MLP_visual_report.png"
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +103,21 @@ def build_preprocessor(X: pd.DataFrame) -> ColumnTransformer:
 
     categorical_pipeline = Pipeline(steps=[
         ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("onehot", OneHotEncoder(handle_unknown="ignore")),
+        # drop="first" removes one reference level per categorical column so
+        # the one-hot levels (plus the model's intercept/bias) can never sum
+        # to a constant -- this is the "dummy variable trap" that produced
+        # coefficients in the quintillions when RFE happened to retain most
+        # levels of one column in the linear-regression pipeline.
+        #
+        # min_frequency=10 buckets any category level appearing in fewer than
+        # 10 training rows into a single "infrequent" column instead of its
+        # own dummy. RFE kept latching onto rare levels like RoofMatl_ClyTile,
+        # RoofMatl_WdShake, Exterior2nd_ImStucc, Condition2_PosA, PoolQC_Gd --
+        # levels with only a handful of examples, which is a classic overfit-
+        # to-noise pattern (a rare level can look highly predictive on a tiny
+        # sample by chance). Bucketing removes that opportunity for both
+        # feature selectors while leaving common categories untouched.
+        ("onehot", OneHotEncoder(handle_unknown="ignore", drop="first", min_frequency=10)),
     ])
 
     preprocessor = ColumnTransformer(transformers=[
@@ -113,13 +127,50 @@ def build_preprocessor(X: pd.DataFrame) -> ColumnTransformer:
     return preprocessor, numeric_cols, categorical_cols
 
 
-def get_selected_feature_names(selector, preprocessor, numeric_cols, categorical_cols):
-    """Recover human-readable feature names for whichever columns a selector kept."""
-    ohe = preprocessor.named_transformers_["cat"].named_steps["onehot"]
+def get_all_feature_names(prep, numeric_cols, categorical_cols):
+    """Full post-encoding feature name list, before any selector is applied."""
+    ohe = prep.named_transformers_["cat"].named_steps["onehot"]
     cat_feature_names = ohe.get_feature_names_out(categorical_cols).tolist()
-    all_feature_names = numeric_cols + cat_feature_names
+    return numeric_cols + cat_feature_names
+
+
+def to_dense(X):
+    return X.toarray() if hasattr(X, "toarray") else X
+
+
+def remove_collinear_features(X_train_proc, X_val_proc, feature_names, threshold=0.95):
+    """Drop one feature from any pair correlated above `threshold` (computed on
+    training data only). Near-duplicate numeric features -- e.g. GrLivArea is
+    almost exactly 1stFlrSF + 2ndFlrSF + LowQualFinSF in this dataset -- can
+    make linear estimators (SelectKBest's F-test denominator, RFE's Ridge
+    ranking) unstable or redundant. Applying this before feature selection
+    keeps both branches on the same de-duplicated, numerically stable footing.
+    """
+    feature_names = np.array(feature_names)
+    corr_matrix = pd.DataFrame(X_train_proc, columns=feature_names).corr().abs()
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    to_drop = [col for col in upper.columns if any(upper[col] > threshold)]
+
+    if to_drop:
+        print(f"  Dropping {len(to_drop)} highly-collinear feature(s) (|r| > {threshold}):")
+        for col in to_drop:
+            partner = upper.index[upper[col] > threshold][0]
+            r = corr_matrix.loc[partner, col]
+            print(f"    {col:<30s} (r = {r:.3f} with {partner})")
+
+    keep_mask = ~np.isin(feature_names, to_drop)
+    return (
+        X_train_proc[:, keep_mask],
+        X_val_proc[:, keep_mask],
+        feature_names[keep_mask].tolist(),
+    )
+
+
+def get_selected_feature_names(selector, feature_names):
+    """Recover human-readable feature names for whichever columns a selector kept,
+    given the (already collinearity-filtered) feature name list it was fit on."""
     mask = selector.get_support()
-    return [name for name, keep in zip(all_feature_names, mask) if keep]
+    return [name for name, keep in zip(feature_names, mask) if keep]
 
 
 def evaluate(y_true, y_pred, n_features):
@@ -140,17 +191,25 @@ def evaluate(y_true, y_pred, n_features):
 
 def run_pipeline(selector_name, selector, X_train_raw, y_train, X_val_raw, y_val,
                   preprocessor, numeric_cols, categorical_cols):
-    """Fit preprocessing + feature selection + MLP on train, evaluate on validation."""
+    """Fit preprocessing + collinearity filter + feature selection + MLP on train,
+    evaluate on validation."""
     # Fit preprocessor + selector on training data only (no leakage)
     prep = ColumnTransformer(transformers=preprocessor.transformers)
-    X_train_proc = prep.fit_transform(X_train_raw)
-    X_val_proc = prep.transform(X_val_raw)
+    X_train_proc = to_dense(prep.fit_transform(X_train_raw))
+    X_val_proc = to_dense(prep.transform(X_val_raw))
+    all_feature_names = get_all_feature_names(prep, numeric_cols, categorical_cols)
+
+    print(f"  Feature matrix before collinearity filtering: {X_train_proc.shape[1]} columns")
+    X_train_proc, X_val_proc, all_feature_names = remove_collinear_features(
+        X_train_proc, X_val_proc, all_feature_names
+    )
+    print(f"  Feature matrix after collinearity filtering: {X_train_proc.shape[1]} columns")
 
     selector.fit(X_train_proc, y_train)
     X_train_sel = selector.transform(X_train_proc)
     X_val_sel = selector.transform(X_val_proc)
 
-    feature_names = get_selected_feature_names(selector, prep, numeric_cols, categorical_cols)
+    feature_names = get_selected_feature_names(selector, all_feature_names)
 
     model = MLPRegressor(**MLP_PARAMS)
     model.fit(X_train_sel, y_train)
@@ -362,8 +421,13 @@ def main():
             ("RFE", RFE(estimator=Ridge(alpha=1.0), n_features_to_select=N_FEATURES)),
         ]:
             prep = ColumnTransformer(transformers=preprocessor.transformers)
-            X_full_proc = prep.fit_transform(X)
-            X_test_proc = prep.transform(X_test_raw)
+            X_full_proc = to_dense(prep.fit_transform(X))
+            X_test_proc = to_dense(prep.transform(X_test_raw))
+            full_feature_names = get_all_feature_names(prep, numeric_cols, categorical_cols)
+
+            X_full_proc, X_test_proc, full_feature_names = remove_collinear_features(
+                X_full_proc, X_test_proc, full_feature_names
+            )
 
             selector_template.fit(X_full_proc, y)
             X_full_sel = selector_template.transform(X_full_proc)
